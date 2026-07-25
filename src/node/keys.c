@@ -1,0 +1,154 @@
+#include <sodium.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <string.h>
+#include "kamelia.h"
+
+int check_archv(const char* name){
+    if(access(name, F_OK) == 0) return 1;
+    return 0;
+}
+
+
+void k_load_cl_k(unsigned char *pub, unsigned char *priv){
+    char nome_pub[64], nome_priv[64];
+    snprintf(nome_pub, sizeof(nome_pub), "keys_client/PUBLIC_KEY.kam");
+    snprintf(nome_priv, sizeof(nome_priv), "keys_client/PRIVATE_KEY.kam");
+    FILE* fp;
+    if(pub){
+        fp = fopen(nome_pub, "rb");
+        if(!fp){
+            printf("[!] Erro: Chave pública do clinete não encontrada!\n");
+            return;
+        }
+        fread(pub, 1, crypto_box_PUBLICKEYBYTES, fp);
+        fclose(fp);
+    }
+    if(priv){
+        fp = fopen(nome_priv, "rb");
+        if(!fp){
+            printf("[!] Erro: Chave privada do cliente não encontrada!\n");
+            return;
+        }
+        fread(priv, 1, crypto_box_SECRETKEYBYTES, fp);
+        fclose(fp);
+    }
+    printf("[+] Chaves X25519 do Cliente carregadas!\n");
+}
+
+void k_gen_cl_k(){
+    if(sodium_init() < 0) return;
+    unsigned char pub[crypto_box_PUBLICKEYBYTES];
+    unsigned char priv[crypto_box_SECRETKEYBYTES];
+    crypto_box_keypair(pub, priv);
+    FILE* fp;
+    mkdir("keys_client", 0700);
+    if(!check_archv("keys_client/PUBLIC_KEY.kam")){
+        fp = fopen("keys_client/PUBLIC_KEY.kam", "wb");
+        if(fp){
+            fwrite(pub, 1, crypto_box_PUBLICKEYBYTES, fp);
+            printf("PUBLIC_KEY.kam gerado!");
+            fclose(fp);
+        }
+    } else {
+        printf("PUBLIC_KEY já existe");
+    }
+    if(!check_archv("keys_client/PRIVATE_KEY.kam")){
+        fp = fopen("keys_client/PRIVATE_KEY.kam", "wb");
+        if(fp){
+            fwrite(priv, 1, crypto_box_SECRETKEYBYTES, fp);
+            printf("\nPRIVATE_KEY foi gerado!");
+            fclose(fp);
+        }
+    } else {
+        printf("\nPRIVATE_KEY já existe");
+    }
+}
+
+
+void k_gen_k(){
+    if(sodium_init() < 0) return;
+    unsigned char pub[crypto_sign_PUBLICKEYBYTES];
+    unsigned char priv[crypto_sign_SECRETKEYBYTES];
+    crypto_sign_keypair(pub, priv);
+    FILE* fp;
+    mkdir("keys", 0700);
+    if(!check_archv("keys/PUBLIC_KEY.kam")){
+        fp = fopen("keys/PUBLIC_KEY.kam", "wb");
+        if(fp){
+            fwrite(pub, 1, crypto_sign_PUBLICKEYBYTES, fp);
+            printf("PUBLIC_KEY.kam gerado!");
+            fclose(fp);
+        }
+    } else {
+        printf("PUBLIC_KEY já existe");
+    }
+    if(!check_archv("keys/PRIVATE_KEY.kam")){
+        fp = fopen("keys/PRIVATE_KEY.kam", "wb");
+        if(fp){
+            fwrite(priv, 1, crypto_sign_SECRETKEYBYTES, fp);
+            printf("\nPRIVATE_KEY foi gerado!");
+            fclose(fp);
+        }
+    } else {
+        printf("\nPRIVATE_KEY já existe");
+    }
+}
+
+void k_gen_kx(int id){
+    if(sodium_init() < 0) return;
+    unsigned char pub[crypto_box_PUBLICKEYBYTES];
+    unsigned char priv[crypto_box_SECRETKEYBYTES];
+    crypto_box_keypair(pub, priv);
+    mkdir("keys_relays", 0700);
+    char nome_pub[64], nome_priv[64];
+    snprintf(nome_pub, sizeof(nome_pub), "keys_relays/relay%d_pub.kx", id);
+    snprintf(nome_priv, sizeof(nome_priv), "keys_relays/relay%d_priv.kx", id);
+    if(!check_archv(nome_pub)){
+        FILE* fp = fopen(nome_pub, "wb");
+        if(fp){
+            fwrite(pub, 1, crypto_box_PUBLICKEYBYTES, fp);
+            printf("[+] relay%d_pub.kx gerado!\n", id);
+            fclose(fp);
+        }
+    } else {
+        printf("[!] relay%d_pub.kx já existe\n", id);
+    }
+    if(!check_archv(nome_priv)){
+        FILE* fp = fopen(nome_priv, "wb");
+        if(fp){
+            fwrite(priv, 1, crypto_box_SECRETKEYBYTES, fp);
+            printf("[+] relay%d_priv.kx gerado!\n", id);
+            fclose(fp);
+        }
+    } else {
+        printf("[!] relay%d_priv.kx já existe\n", id);
+    }
+}
+
+void k_load_kx(int id, unsigned char *pub, unsigned char *priv){
+    char nome_pub[64], nome_priv[64];
+    snprintf(nome_pub, sizeof(nome_pub), "keys_relays/relay%d_pub.kx", id);
+    snprintf(nome_priv, sizeof(nome_priv), "keys_relays/relay%d_priv.kx", id);
+    FILE* fp;
+    if(pub){
+        fp = fopen(nome_pub, "rb");
+        if(!fp){
+            printf("[!] Erro: relay%d_pub.kx não encontrado!\n", id);
+            return;
+        }
+        fread(pub, 1, crypto_box_PUBLICKEYBYTES, fp);
+        fclose(fp);
+    }
+    if(priv){
+        fp = fopen(nome_priv, "rb");
+        if(!fp){
+            printf("[!] Erro: relay%d_priv.kx não encontrado!\n", id);
+            return;
+        }
+        fread(priv, 1, crypto_box_SECRETKEYBYTES, fp);
+        fclose(fp);
+    }
+    printf("[+] Chaves X25519 do Relay %d carregadas!\n", id);
+}

@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include <string.h>
+#include "kamelia.h"
+
+int main(int argc, char *argv[]){
+    if(sodium_init() < 0){
+        printf("Erro ao inicializar libsodium\n");
+        return 1;
+    }
+    if(argc < 2){
+        printf("Uso:\n");
+        printf("  %s gen              - Gerar chaves e endereço\n", argv[0]);
+        printf("  %s gen_relays       - Gerar chaves X25519 para relays\n", argv[0]);
+        printf("  %s relay [porta] [id] - Rodar relay onion\n", argv[0]);
+        printf("  %s server [porta]   - Rodar servidor onion\n", argv[0]);
+        printf("  %s client           - Rodar cliente onion (teste)\n", argv[0]);
+        return 1;
+    }
+    if(strcmp(argv[1], "gen") == 0){
+        k_gen_k();
+        a_gen_addr();
+    } else if(strcmp(argv[1], "gen_cl") == 0){
+        k_gen_cl_k();
+    } else if(strcmp(argv[1], "gen_relays") == 0){
+        k_gen_kx(1);
+        k_gen_kx(2);
+        k_gen_kx(3);
+    } else if(strcmp(argv[1], "relay") == 0){
+        if(argc < 4){
+            printf("Uso: %s relay [porta] [id]\n", argv[0]);
+            return 1;
+        }
+        relay_onion(atoi(argv[2]), atoi(argv[3]));
+    } else if(strcmp(argv[1], "server") == 0){
+        int porta = (argc > 2) ? atoi(argv[2]) : PORTA_PADRAO;
+        server_onion(porta);
+    } else if(strcmp(argv[1], "client") == 0){
+        TabelaDHT tabela;
+        carregar_relays_fixos(&tabela);
+        cliente_enviar("PING", &tabela);
+    } else {
+        printf("Comando desconhecido: %s\n", argv[1]);
+    }
+    return 0;
+}
