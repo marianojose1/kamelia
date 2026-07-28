@@ -10,7 +10,7 @@
 
 ---
 
-## 🧠 Como funciona?
+## 🧠 Como funciona?                        .
 
 ```
 Cliente → Relay 1 → Relay 2 → Relay 3 → Servidor
