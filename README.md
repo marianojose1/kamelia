@@ -1,6 +1,6 @@
 # 🌐 .KAMELIA - Rede Descentralizada       ralizada Descentralizada
 
-**Uma rede anônima do zero, inspirada no Tor, mas com implementação própria.**
+**Uma rede anônima do zero, inspirada no Tor, mas com implementação própria.**                        
       
 ---
 
